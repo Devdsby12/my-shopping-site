@@ -14,6 +14,11 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
+// ✅ Health check route for Render
+app.get("/", (req, res) => {
+  res.send("Server is running ✅");
+});
+
 // MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
@@ -69,10 +74,8 @@ app.get('/admin', async (req, res) => {
   res.send(`<h2>Orders</h2>${html}`);
 });
 
-// Start server
+// ✅ Start server on correct port for Render
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
-
