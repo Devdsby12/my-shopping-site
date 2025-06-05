@@ -4,10 +4,26 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": ""
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Devdsby12/my-shopping-site.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Devdsby12/my-shopping-site/issues"
+  },
+  "homepage": "https://github.com/Devdsby12/my-shopping-site#readme",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-basic-auth": "^1.2.1",
+    "mongoose": "^8.15.1",
+    "nodemailer": "^7.0.3"
+  }
 }
