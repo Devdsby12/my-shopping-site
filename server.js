@@ -18,6 +18,7 @@ app.use(express.static('public'));
 app.get("/", (req, res) => {
   res.send("Server is running ✅");
 });
+// Trigger redeploy
 
 // MongoDB
 mongoose.connect(process.env.MONGO_URI, {
