@@ -1,4 +1,3 @@
-// ==== FILE: server.js ====
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
@@ -75,7 +74,7 @@ app.get('/products', async (req, res) => {
   res.json(products);
 });
 
-// 🧾 Order Form (SAFE VERSION)
+// 🧾 Order Form (Fixed Version)
 app.post('/order', async (req, res) => {
   try {
     const { name, mobile, state, district, address } = req.body;
@@ -94,6 +93,7 @@ app.post('/order', async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: process.env.EMAIL_TO,
+      replyTo: process.env.EMAIL_TO,  // ✅ Make replies go to the recipient
       subject: '🛒 New Order',
       text: `Name: ${name}\nMobile: ${mobile}\nState: ${state}\nDistrict: ${district}\nAddress: ${address}`
     });
