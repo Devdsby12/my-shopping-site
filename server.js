@@ -75,7 +75,7 @@ app.post('/admin/add-product', upload.array('images'), async (req, res) => {
 
     res.send('✅ Product added!');
   } catch (error) {
-    console.error('Error adding product:', error);
+    console.error('❌ Error adding product:', error.message, error.stack);
     res.status(500).send('❌ Internal Server Error');
   }
 });
@@ -117,7 +117,7 @@ app.post('/order', async (req, res) => {
 
     res.send('✅ Order placed!');
   } catch (err) {
-    console.error('❌ Order Error:', err.message);
+    console.error('❌ Order Error:', err.message, err.stack);
     res.status(500).send('❌ Failed to place order. Please try again later.');
   }
 });
