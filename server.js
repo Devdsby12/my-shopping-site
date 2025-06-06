@@ -27,10 +27,8 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => console.log('✅ Connected to MongoDB'))
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => console.error('❌ MongoDB error:', err));
 
 // Cloudinary
@@ -77,28 +75,34 @@ app.get('/products', async (req, res) => {
   res.json(products);
 });
 
-// 🧾 Order Form
+// 🧾 Order Form (SAFE VERSION)
 app.post('/order', async (req, res) => {
-  const { name, mobile, state, district, address } = req.body;
-  const order = new Order({ name, mobile, state, district, address });
-  await order.save();
+  try {
+    const { name, mobile, state, district, address } = req.body;
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_FROM,
-      pass: process.env.EMAIL_PASS
-    }
-  });
+    const order = new Order({ name, mobile, state, district, address });
+    await order.save();
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: process.env.EMAIL_TO,
-    subject: '🛒 New Order',
-    text: `Name: ${name}\nMobile: ${mobile}\nState: ${state}\nDistrict: ${district}\nAddress: ${address}`
-  });
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_FROM,
+        pass: process.env.EMAIL_PASS
+      }
+    });
 
-  res.send('✅ Order placed!');
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: process.env.EMAIL_TO,
+      subject: '🛒 New Order',
+      text: `Name: ${name}\nMobile: ${mobile}\nState: ${state}\nDistrict: ${district}\nAddress: ${address}`
+    });
+
+    res.send('✅ Order placed!');
+  } catch (err) {
+    console.error('❌ Order Error:', err.message);
+    res.status(500).send('❌ Failed to place order. Please try again later.');
+  }
 });
 
 // 🏠 Home Route
