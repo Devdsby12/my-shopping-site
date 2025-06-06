@@ -22,7 +22,9 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static(__dirname));
+
+// ✅ Serve static files from "public" folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB
 mongoose.connect(process.env.MONGO_URI, {
@@ -55,9 +57,9 @@ app.use('/admin', basicAuth({
   challenge: true
 }));
 
-// ➕ Admin Upload
+// ➕ Admin Upload Page
 app.get('/admin.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
 app.post('/admin/add-product', upload.array('images'), async (req, res) => {
@@ -99,8 +101,10 @@ app.post('/order', async (req, res) => {
   res.send('✅ Order placed!');
 });
 
-// 🔁 Health check
-app.get('/', (req, res) => res.send('✅ Server is running'));
+// 🏠 Home Route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
