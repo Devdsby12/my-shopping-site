@@ -22,15 +22,15 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// ✅ Serve static files from "public" folder
+// Serve static files from "public" folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => console.error('❌ MongoDB error:', err));
 
-// Cloudinary
+// Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUD_API_KEY,
@@ -48,17 +48,18 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-// 🔐 Admin Auth
+// Admin Basic Auth (protect /admin routes)
 app.use('/admin', basicAuth({
   users: { 'imadmin$': 'wwdevkhati1@gmail.com' },
   challenge: true
 }));
 
-// ➕ Admin Upload Page
+// Serve admin upload page
 app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
+// Add new product (with images upload)
 app.post('/admin/add-product', upload.array('images'), async (req, res) => {
   try {
     const { title, price, description } = req.body;
@@ -79,14 +80,18 @@ app.post('/admin/add-product', upload.array('images'), async (req, res) => {
   }
 });
 
-
-// 🛍 Products List
+// Get all products list
 app.get('/products', async (req, res) => {
-  const products = await Product.find().sort({ createdAt: -1 });
-  res.json(products);
+  try {
+    const products = await Product.find().sort({ createdAt: -1 });
+    res.json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).send('❌ Failed to load products');
+  }
 });
 
-// 🧾 Order Form (Fixed Version)
+// Handle order submission
 app.post('/order', async (req, res) => {
   try {
     const { name, mobile, state, district, address } = req.body;
@@ -105,7 +110,7 @@ app.post('/order', async (req, res) => {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: process.env.EMAIL_TO,
-      replyTo: process.env.EMAIL_TO,  // ✅ Make replies go to the recipient
+      replyTo: process.env.EMAIL_TO,
       subject: '🛒 New Order',
       text: `Name: ${name}\nMobile: ${mobile}\nState: ${state}\nDistrict: ${district}\nAddress: ${address}`
     });
@@ -117,7 +122,7 @@ app.post('/order', async (req, res) => {
   }
 });
 
-// 🏠 Home Route
+// Serve homepage
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
