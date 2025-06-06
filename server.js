@@ -59,12 +59,13 @@ app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// Add new product (with images upload)
+// ✅ Add new product with detailed error logging
 app.post('/admin/add-product', upload.array('images'), async (req, res) => {
   try {
     const { title, price, description } = req.body;
 
     if (!req.files || req.files.length === 0) {
+      console.error('❌ No images received:', req.files);
       return res.status(400).send('❌ No images uploaded');
     }
 
@@ -75,8 +76,12 @@ app.post('/admin/add-product', upload.array('images'), async (req, res) => {
 
     res.send('✅ Product added!');
   } catch (error) {
-    console.error('❌ Error adding product:', error.message, error.stack);
-    res.status(500).send('❌ Internal Server Error');
+    console.error('❌ Error adding product:');
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('Request Body:', req.body);
+    console.error('Files:', req.files);
+    res.status(500).send('❌ Internal Server Error: ' + error.message);
   }
 });
 
@@ -117,7 +122,7 @@ app.post('/order', async (req, res) => {
 
     res.send('✅ Order placed!');
   } catch (err) {
-    console.error('❌ Order Error:', err.message, err.stack);
+    console.error('❌ Order Error:', err.message);
     res.status(500).send('❌ Failed to place order. Please try again later.');
   }
 });
@@ -129,3 +134,4 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Handle 404 errors
