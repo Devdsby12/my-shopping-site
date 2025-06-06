@@ -1,0 +1,24 @@
+<!-- admin.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin - Add Product</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f9f9f9; }
+    form { background: white; padding: 20px; max-width: 500px; margin: auto; border-radius: 10px; box-shadow: 0 0 10px #ccc; }
+    input, textarea, button { width: 100%; margin-top: 10px; padding: 10px; border-radius: 5px; }
+    button { background: #28a745; color: white; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>Upload New Product</h2>
+  <form action="/admin/add-product" method="POST" enctype="multipart/form-data">
+    <input type="text" name="title" placeholder="Product Title" required>
+    <input type="number" name="price" placeholder="Price" required>
+    <textarea name="description" placeholder="Product Description" required></textarea>
+    <input type="file" name="images" multiple required>
+    <button type="submit">Upload</button>
+  </form>
+</body>
+</html>

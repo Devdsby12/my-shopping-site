@@ -1,47 +1,86 @@
+// ==== FILE: server.js ====
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const basicAuth = require('express-basic-auth');
 const cors = require('cors');
+const dotenv = require('dotenv');
 const path = require('path');
 
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+
+const Product = require('./models/product');
+const Order = require('./models/order');
+
+dotenv.config();
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static('public'));
-
-// ✅ Health check route for Render
-app.get("/", (req, res) => {
-  res.send("Server is running ✅");
-});
-// Trigger redeploy
+app.use(express.static(__dirname));
 
 // MongoDB
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
 }).then(() => console.log('✅ Connected to MongoDB'))
   .catch(err => console.error('❌ MongoDB error:', err));
 
-// Schema
-const orderSchema = new mongoose.Schema({
-  name: String,
-  address: String,
-  time: { type: Date, default: Date.now }
+// Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.CLOUD_API_KEY,
+  api_secret: process.env.CLOUD_API_SECRET
 });
-const Order = mongoose.model('Order', orderSchema);
 
-// Order form handler
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'products',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+    transformation: [{ width: 800, crop: "scale" }]
+  }
+});
+
+const upload = multer({ storage });
+
+// 🔐 Admin Auth
+app.use('/admin', basicAuth({
+  users: { 'imadmin$': 'wwdevkhati1@gmail.com' },
+  challenge: true
+}));
+
+// ➕ Admin Upload
+app.get('/admin.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+app.post('/admin/add-product', upload.array('images'), async (req, res) => {
+  const { title, price, description } = req.body;
+  const imageUrls = req.files.map(file => file.path);
+
+  const product = new Product({ title, price, description, imageUrls });
+  await product.save();
+  res.send('✅ Product added!');
+});
+
+// 🛍 Products List
+app.get('/products', async (req, res) => {
+  const products = await Product.find().sort({ createdAt: -1 });
+  res.json(products);
+});
+
+// 🧾 Order Form
 app.post('/order', async (req, res) => {
-  const { name, address } = req.body;
-  const newOrder = new Order({ name, address });
-  await newOrder.save();
+  const { name, mobile, state, district, address } = req.body;
+  const order = new Order({ name, mobile, state, district, address });
+  await order.save();
 
-  // Send email
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -53,30 +92,15 @@ app.post('/order', async (req, res) => {
   await transporter.sendMail({
     from: process.env.EMAIL_FROM,
     to: process.env.EMAIL_TO,
-    subject: 'New Order Received',
-    text: `Name: ${name}\nAddress: ${address}`
+    subject: '🛒 New Order',
+    text: `Name: ${name}\nMobile: ${mobile}\nState: ${state}\nDistrict: ${district}\nAddress: ${address}`
   });
 
-  res.send('Order placed successfully!');
+  res.send('✅ Order placed!');
 });
 
-// Admin page (Basic Auth protected)
-app.use('/admin', basicAuth({
-  users: { 'imadmin$': 'wwdevkhati1@gmail.com' },
-  challenge: true
-}));
+// 🔁 Health check
+app.get('/', (req, res) => res.send('✅ Server is running'));
 
-app.get('/admin', async (req, res) => {
-  const orders = await Order.find().sort({ time: -1 });
-  const html = orders.map(order => `
-    <p><strong>${order.name}</strong><br>${order.address}<br><em>${order.time.toLocaleString()}</em></p>
-    <hr>
-  `).join('');
-  res.send(`<h2>Orders</h2>${html}`);
-});
-
-// ✅ Start server on correct port for Render
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
