@@ -60,13 +60,25 @@ app.get('/admin.html', (req, res) => {
 });
 
 app.post('/admin/add-product', upload.array('images'), async (req, res) => {
-  const { title, price, description } = req.body;
-  const imageUrls = req.files.map(file => file.path);
+  try {
+    const { title, price, description } = req.body;
 
-  const product = new Product({ title, price, description, imageUrls });
-  await product.save();
-  res.send('✅ Product added!');
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).send('❌ No images uploaded');
+    }
+
+    const imageUrls = req.files.map(file => file.path);
+
+    const product = new Product({ title, price, description, imageUrls });
+    await product.save();
+
+    res.send('✅ Product added!');
+  } catch (error) {
+    console.error('Error adding product:', error);
+    res.status(500).send('❌ Internal Server Error');
+  }
 });
+
 
 // 🛍 Products List
 app.get('/products', async (req, res) => {
